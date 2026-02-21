@@ -9,11 +9,9 @@
 
 (function() {
     'use strict';
-
     // ────────────────────────────────────────────────
     // SPAMMER CORE (your original logic with minor prefixing)
     // ────────────────────────────────────────────────
-
     let SPAM_TEXT = localStorage.getItem('JJ_SPAM_TEXT') || "lol";
     let INTERVAL_MS = parseInt(localStorage.getItem('JJ_INTERVAL_MS')) || 100;
     let isBurstMode = localStorage.getItem('JJ_BURST') === 'true' || false;
