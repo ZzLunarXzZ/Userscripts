@@ -1,0 +1,435 @@
+// ==UserScript==
+// @name         WhatsApp Spammer By JJ + Drag-to-Select Messages
+// @namespace    graphen-fixed
+// @version      3.8.10-drag
+// @description  Insane WhatsApp Spammer + drag mouse over bubbles in select mode to bulk-check messages for forward/copy/delete
+// @match        https://web.whatsapp.com/*
+// @grant        none
+// ==/UserScript==
+
+(function () {
+  'use strict';
+
+  /* =======================
+     === YOUR ORIGINAL SPAMMER CODE (unchanged except minor var renames for safety) ===
+  ======================= */
+
+  /* STATE / PERSISTENCE */
+  let JJ_SPAM_TEXT = localStorage.getItem('JJ_SPAM_TEXT') || "lol";
+  let JJ_INTERVAL_MS = parseInt(localStorage.getItem('JJ_INTERVAL_MS')) || 100;
+  let JJ_isBurstMode = localStorage.getItem('JJ_BURST') === 'true' || false;
+  let JJ_burstCount = parseInt(localStorage.getItem('JJ_BURST_COUNT')) || 10;
+  let JJ_burstCooldown = parseInt(localStorage.getItem('JJ_BURST_COOLDOWN')) || 2000;
+  let JJ_lightweightMode = localStorage.getItem('JJ_LIGHT') === 'true' || false;
+  let JJ_customHotkey = localStorage.getItem('JJ_HOTKEY') || '';
+  let JJ_spamBtn, JJ_settingsOverlay;
+  let JJ_isSpamming = false;
+  let JJ_spamTimer = null;
+
+  /* CORE FUNCTIONS */
+  function JJ_getInput() {
+    return document.querySelector('[contenteditable="true"][data-tab="10"]');
+  }
+
+  function JJ_sendMessage() {
+    const input = JJ_getInput();
+    if (!input) return;
+    input.focus();
+    document.execCommand('insertText', false, JJ_SPAM_TEXT);
+    input.dispatchEvent(new KeyboardEvent('keydown', {
+      bubbles: true,
+      cancelable: true,
+      key: 'Enter',
+      code: 'Enter',
+      keyCode: 13
+    }));
+  }
+
+  /* SPAM CONTROL */
+  function JJ_startSpam() {
+    if (JJ_isSpamming) return;
+    JJ_isSpamming = true;
+    JJ_spamBtn.textContent = 'SPAM: ON';
+    JJ_spamBtn.style.background = '#43a047';
+    JJ_spamBtn.style.animation = 'spamPulse 1.2s infinite';
+    if (JJ_isBurstMode) {
+      JJ_burstSpamLoop();
+    } else {
+      JJ_spamTimer = setInterval(JJ_sendMessage, JJ_INTERVAL_MS);
+    }
+  }
+
+  function JJ_burstSpamLoop() {
+    let sent = 0;
+    JJ_spamTimer = setInterval(() => {
+      if (!JJ_isSpamming) return clearInterval(JJ_spamTimer);
+      JJ_sendMessage();
+      sent++;
+      if (sent >= JJ_burstCount) {
+        clearInterval(JJ_spamTimer);
+        sent = 0;
+        setTimeout(() => {
+          if (JJ_isSpamming) JJ_burstSpamLoop();
+        }, JJ_burstCooldown);
+      }
+    }, JJ_INTERVAL_MS);
+  }
+
+  function JJ_stopSpam() {
+    JJ_isSpamming = false;
+    clearInterval(JJ_spamTimer);
+    JJ_spamTimer = null;
+    JJ_spamBtn.textContent = 'SPAM: OFF';
+    JJ_spamBtn.style.background = '#e53935';
+    JJ_spamBtn.style.animation = 'none';
+  }
+
+  /* SPAM BUTTON */
+  function JJ_createSpamButton() {
+    if (JJ_spamBtn) return;
+    JJ_spamBtn = document.createElement('button');
+    JJ_spamBtn.textContent = 'SPAM: OFF';
+    Object.assign(JJ_spamBtn.style, {
+      position: 'fixed',
+      top: '12px',
+      right: '12px',
+      zIndex: 99999,
+      padding: '10px 16px',
+      fontWeight: 'bold',
+      color: '#fff',
+      background: '#e53935',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer'
+    });
+    JJ_spamBtn.onclick = () => JJ_isSpamming ? JJ_stopSpam() : JJ_startSpam();
+    document.body.appendChild(JJ_spamBtn);
+  }
+
+  /* SETTINGS PANEL */
+  function JJ_createSettingsOverlay() {
+    if (JJ_settingsOverlay) return;
+    JJ_settingsOverlay = document.createElement('div');
+    JJ_settingsOverlay.className = 'jj-tutorial';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'jj-matrix';
+    JJ_settingsOverlay.appendChild(canvas);
+    const panel = document.createElement('div');
+    panel.className = 'jj-panel';
+    panel.innerHTML = `
+      <h2>⚙️ Settings</h2>
+      <label>Message</label>
+      <textarea id="msg">${JJ_SPAM_TEXT}</textarea>
+      <label>Speed (msg/sec) <span id="speedValue">${Math.round(1000/JJ_INTERVAL_MS)}</span></label>
+      <input id="speed" type="range" min="1" max="50" value="${Math.round(1000/JJ_INTERVAL_MS)}">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <label for="burstToggle">Burst Mode</label>
+        <input id="burstToggle" type="checkbox" ${JJ_isBurstMode ? 'checked' : ''}>
+      </div>
+      <div id="burstBox" style="opacity:${JJ_isBurstMode ? 1 : 0.6}; margin-left:0; margin-bottom:12px;">
+        <label>Messages per burst</label>
+        <input id="burstCount" type="number" value="${JJ_burstCount}">
+        <label>Cooldown (ms)</label>
+        <input id="burstCooldown" type="number" value="${JJ_burstCooldown}">
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <label for="lightToggle">Lightweight Mode</label>
+        <input id="lightToggle" type="checkbox" ${JJ_lightweightMode ? 'checked' : ''}>
+      </div>
+      <label>Custom Spam Hotkey</label>
+      <input id="hotkeyInput" type="text" placeholder="Press key..." readonly value="${JJ_customHotkey}">
+      <span style="font-size:12px;color:#aaa;">Press Backspace to reset</span>
+      <button id="closeSettings">Close</button>
+    `;
+    JJ_settingsOverlay.appendChild(panel);
+    document.body.appendChild(JJ_settingsOverlay);
+    JJ_settingsOverlay.style.display = 'none';
+    JJ_settingsOverlay.style.flexDirection = 'column';
+    JJ_settingsOverlay.style.alignItems = 'center';
+    JJ_settingsOverlay.style.justifyContent = 'center';
+    JJ_settingsOverlay.onclick = e => {
+      if (e.target === JJ_settingsOverlay) JJ_settingsOverlay.style.display = 'none';
+    };
+    panel.querySelector('#closeSettings').onclick =
+      () => JJ_settingsOverlay.style.display = 'none';
+
+    // MATRIX effect
+    const ctx = canvas.getContext('2d');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    if (!JJ_lightweightMode) {
+      const fontSize = 14;
+      const columns = Math.floor(canvas.width / fontSize);
+      const drops = Array(columns).fill(0).map(() => Math.random() * canvas.height);
+      function draw() {
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0,255,140,0.35)';
+        ctx.font = `${fontSize}px monospace`;
+        for (let i = 0; i < drops.length; i++) {
+          ctx.fillText(Math.floor(Math.random() * 10), i * fontSize, drops[i]);
+          drops[i] += fontSize * 0.6;
+          if (drops[i] > canvas.height && Math.random() > 0.98) drops[i] = 0;
+        }
+        canvas._anim = requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // CONTROLS
+    const msgInput = panel.querySelector('#msg');
+    const speedInput = panel.querySelector('#speed');
+    const speedValue = panel.querySelector('#speedValue');
+    const burstToggle = panel.querySelector('#burstToggle');
+    const burstBox = panel.querySelector('#burstBox');
+    const burstCountInput = panel.querySelector('#burstCount');
+    const burstCooldownInput = panel.querySelector('#burstCooldown');
+    const lightToggle = panel.querySelector('#lightToggle');
+    const hotkeyInput = panel.querySelector('#hotkeyInput');
+
+    msgInput.oninput = e => {
+      JJ_SPAM_TEXT = e.target.value || " ";
+      localStorage.setItem('JJ_SPAM_TEXT', JJ_SPAM_TEXT);
+    };
+    speedInput.oninput = e => {
+      JJ_INTERVAL_MS = Math.round(1000 / e.target.value);
+      speedValue.textContent = e.target.value;
+      localStorage.setItem('JJ_INTERVAL_MS', JJ_INTERVAL_MS);
+      if (JJ_isSpamming) JJ_stopSpam(), JJ_startSpam();
+    };
+    burstToggle.onchange = e => {
+      JJ_isBurstMode = e.target.checked;
+      localStorage.setItem('JJ_BURST', JJ_isBurstMode);
+      burstBox.style.opacity = JJ_isBurstMode ? '1' : '.6';
+      if (JJ_isSpamming) JJ_stopSpam(), JJ_startSpam();
+    };
+    burstCountInput.oninput = e => {
+      JJ_burstCount = +e.target.value;
+      localStorage.setItem('JJ_BURST_COUNT', JJ_burstCount);
+    };
+    burstCooldownInput.oninput = e => {
+      JJ_burstCooldown = +e.target.value;
+      localStorage.setItem('JJ_BURST_COOLDOWN', JJ_burstCooldown);
+    };
+    lightToggle.onchange = e => {
+      JJ_lightweightMode = e.target.checked;
+      localStorage.setItem('JJ_LIGHT', JJ_lightweightMode);
+    };
+    hotkeyInput.addEventListener('keydown', e => {
+      e.preventDefault();
+      if (e.key === "Backspace") {
+        hotkeyInput.value = '';
+        JJ_customHotkey = '';
+        localStorage.setItem('JJ_HOTKEY', '');
+      } else {
+        let combo = [];
+        if (e.ctrlKey) combo.push('Ctrl');
+        if (e.shiftKey) combo.push('Shift');
+        if (e.altKey) combo.push('Alt');
+        combo.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+        hotkeyInput.value = combo.join('+');
+        JJ_customHotkey = hotkeyInput.value;
+        localStorage.setItem('JJ_HOTKEY', JJ_customHotkey);
+      }
+    });
+  }
+
+  /* HOTKEY LISTENER */
+  document.addEventListener('keydown', e => {
+    const active = document.activeElement;
+    if (active && active.id === 'hotkeyInput') return;
+    if (e.ctrlKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (!JJ_settingsOverlay) JJ_createSettingsOverlay();
+      JJ_settingsOverlay.style.display =
+        JJ_settingsOverlay.style.display === 'flex' ? 'none' : 'flex';
+    }
+    if (!JJ_customHotkey) return;
+    const keys = JJ_customHotkey.split('+');
+    let match = true;
+    match = match && (!keys.includes('Ctrl') || e.ctrlKey);
+    match = match && (!keys.includes('Shift') || e.shiftKey);
+    match = match && (!keys.includes('Alt') || e.altKey);
+    match = match && keys.includes(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+    if (match) {
+      e.preventDefault();
+      JJ_isSpamming ? JJ_stopSpam() : JJ_startSpam();
+    }
+  });
+
+  /* TUTORIAL */
+  function JJ_showTutorial() {
+    const overlay = document.createElement('div');
+    overlay.className = 'jj-tutorial';
+    const canvas = document.createElement('canvas');
+    canvas.className = 'jj-matrix';
+    overlay.appendChild(canvas);
+    const neon = document.createElement('div');
+    neon.className = 'jj-neon';
+    neon.textContent = 'Best WhatsApp Spammer By JJ';
+    overlay.appendChild(neon);
+    const box = document.createElement('div');
+    box.className = 'jj-panel';
+    box.innerHTML = `
+      <h2>👋 Welcome</h2>
+      <p>• Click <b>SPAM</b> to start / stop</p>
+      <p>• Press <b>Ctrl + S</b> to open settings</p>
+      <p>• Customize message, speed, burst mode & hotkey</p>
+      <p style="opacity:.7;">Created by JJ</p>
+      <button id="closeTut">Got it</button>
+    `;
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    box.querySelector('#closeTut').onclick = () => {
+      overlay.remove();
+      cancelAnimationFrame(canvas._anim);
+    };
+    const ctx = canvas.getContext('2d');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    if (!JJ_lightweightMode) {
+      const fontSize = 14;
+      const columns = Math.floor(canvas.width / fontSize);
+      const drops = Array(columns).fill(0).map(() => Math.random() * canvas.height);
+      function draw() {
+        ctx.fillStyle = 'rgba(0,0,0,0.08)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0,255,140,0.35)';
+        ctx.font = `${fontSize}px monospace`;
+        for (let i = 0; i < drops.length; i++) {
+          ctx.fillText(Math.floor(Math.random() * 10), i * fontSize, drops[i]);
+          drops[i] += fontSize * 0.6;
+          if (drops[i] > canvas.height && Math.random() > 0.98) drops[i] = 0;
+        }
+        canvas._anim = requestAnimationFrame(draw);
+      }
+      draw();
+    }
+  }
+
+  /* STYLES */
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes spamPulse { 0% { box-shadow: 0 0 0 rgba(67,160,71,0); } 50% { box-shadow: 0 0 20px rgba(67,160,71,.9); } 100% { box-shadow: 0 0 0 rgba(67,160,71,0); } }
+    @keyframes smokeFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    @keyframes flicker { 0%,19%,21%,23%,25%,54%,56%,100% { opacity: 1; } 20%,22%,24%,55% { opacity: .4; } }
+    .jj-tutorial { position: fixed; inset: 0; z-index: 100001; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 20% 30%, rgba(0,255,140,0.25), transparent 60%), radial-gradient(circle at 80% 70%, rgba(0,150,90,0.25), transparent 60%), radial-gradient(circle at 50% 50%, rgba(0,0,0,0.95), #000); background-size: 200% 200%; animation: smokeFlow 20s ease-in-out infinite; overflow: hidden; }
+    .jj-matrix { position: absolute; inset: 0; opacity: 0.6; z-index:1; }
+    .jj-neon { position: relative; z-index: 2; margin-bottom: 20px; font-size: 32px; font-weight: 900; color: #00ff99; text-shadow:0 0 5px #00ff99,0 0 10px #00ff99,0 0 20px #00ff99,0 0 40px #00ff99; animation: flicker 1.6s infinite; text-align: center; }
+    .jj-panel { position: relative; z-index: 2; background: rgba(15,15,15,0.85); color: #fff; padding: 20px; border-radius: 12px; width: 420px; max-width: 90%; max-height: 80vh; overflow-y: auto; font-family: system-ui; box-shadow: 0 20px 40px rgba(0,0,0,.6); }
+    .jj-panel textarea,.jj-panel input,.jj-panel button,.jj-panel span { width: 100%; margin-bottom: 10px; padding: 6px; background: #111; color: #fff; border: 1px solid #333; border-radius: 6px; }
+    .jj-panel span { display: inline-block; width: auto; background: none; border: none; padding: 0; margin-left: 6px; }
+    .jj-panel label { display: inline-block; margin: 0; font-weight: normal; }
+  `;
+  document.head.appendChild(style);
+
+  /* INIT - your original init */
+  JJ_showTutorial();
+  const JJ_observer = new MutationObserver(() => {
+    if (JJ_getInput()) {
+      JJ_createSpamButton();
+      JJ_createSettingsOverlay();
+      JJ_observer.disconnect();
+    }
+  });
+  JJ_observer.observe(document.body, { childList: true, subtree: true });
+
+  /* =======================
+     === DRAG-TO-SELECT FEATURE (added below - runs independently) ===
+  ======================= */
+
+  let drag_isDragging = false;
+  let drag_startBubble = null;
+  let drag_chatArea = null;
+
+  function drag_findChatArea() {
+    return document.querySelector('#main div[role="list"], div[data-testid*="conversation-panel"], main > div > div:nth-child(2), #main');
+  }
+
+  function drag_getBubbles() {
+    if (!drag_chatArea) return [];
+    return Array.from(drag_chatArea.querySelectorAll(
+      'div[role="row"], div[data-pre-plain-text], div.message-in, div.message-out, div.selectable'
+    ));
+  }
+
+  function drag_isSelectMode() {
+    const cb = document.querySelector('input[type="checkbox"][aria-checked]');
+    return !!cb;
+  }
+
+  function drag_getCheckboxInBubble(bubble) {
+    return bubble.querySelector('input[type="checkbox"][aria-checked]');
+  }
+
+  function drag_toggleBubble(bubble) {
+    if (!bubble) return;
+    const cb = drag_getCheckboxInBubble(bubble);
+    if (cb && !cb.checked) {
+      cb.click();
+    }
+  }
+
+  function drag_selectRange(start, current) {
+    const bubbles = drag_getBubbles();
+    const startIdx = bubbles.indexOf(start);
+    const currIdx = bubbles.indexOf(current);
+    if (startIdx < 0 || currIdx < 0) return;
+    const min = Math.min(startIdx, currIdx);
+    const max = Math.max(startIdx, currIdx);
+    for (let i = min; i <= max; i++) {
+      drag_toggleBubble(bubbles[i]);
+    }
+  }
+
+  function drag_mouseDown(e) {
+    if (!drag_isSelectMode()) return;
+    const bubble = e.target.closest('div[role="row"], div[data-pre-plain-text], div.message-in, div.message-out, div.selectable, div[class*="message"]');
+    if (bubble) {
+      drag_isDragging = true;
+      drag_startBubble = bubble;
+      drag_toggleBubble(bubble);
+      e.preventDefault();
+    }
+  }
+
+  function drag_mouseMove(e) {
+    if (!drag_isDragging) return;
+    const bubble = e.target.closest('div[role="row"], div[data-pre-plain-text], div.message-in, div.message-out, div.selectable, div[class*="message"]');
+    if (bubble && bubble !== drag_startBubble) {
+      drag_selectRange(drag_startBubble, bubble);
+    }
+  }
+
+  function drag_mouseUp() {
+    if (drag_isDragging) {
+      drag_isDragging = false;
+      drag_startBubble = null;
+    }
+  }
+
+  function drag_attachListeners() {
+    drag_chatArea = drag_findChatArea();
+    if (drag_chatArea && !drag_chatArea.dataset.dragAttached) {
+      drag_chatArea.addEventListener('mousedown', drag_mouseDown, true);
+      drag_chatArea.addEventListener('mousemove', drag_mouseMove, true);
+      document.addEventListener('mouseup', drag_mouseUp, true);
+      drag_chatArea.dataset.dragAttached = 'true';
+    }
+  }
+
+  // Auto-attach when chat loads / changes
+  const drag_observer = new MutationObserver(drag_attachListeners);
+  drag_observer.observe(document.body, { childList: true, subtree: true });
+  drag_attachListeners();
+  setInterval(drag_attachListeners, 2000);  // backup retry
+
+})();
