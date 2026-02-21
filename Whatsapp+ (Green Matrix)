@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         WhatsApp Spammer By JJ
+// @name         WhatsApp Spammer By JJ + Drag-to-Select (Blue Cyber Tech)
 // @namespace    graphen-fixed
-// @version      3.8.10
-// @description  Insane WhatsApp Spammer
+// @version      3.9.2
+// @description  Insane WhatsApp Spammer 
 // @match        https://web.whatsapp.com/*
 // @grant        none
 // ==/UserScript==
