@@ -2,7 +2,7 @@
 // @name         WhatsApp Spammer By JJ + Drag-to-Select Messages
 // @namespace    graphen-fixed
 // @version      3.8.10-drag
-// @description  Insane WhatsApp Spammer + drag mouse over bubbles in select mode to bulk-check messages for forward/copy/delete
+// @description  Insane WhatsApp Spammer + drag box in select mode 
 // @match        https://web.whatsapp.com/*
 // @grant        none
 // ==/UserScript==
