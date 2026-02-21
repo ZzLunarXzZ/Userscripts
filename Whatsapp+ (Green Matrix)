@@ -1,169 +1,419 @@
 // ==UserScript==
-// @name         WhatsApp Spammer By JJ + Drag-to-Select (Green Matrix)
-// @namespace    graphen-fixed
-// @version      3.9.2
-// @description  Spammer + drag select • theme selector forced every load with extreme visibility fixes
-// @match        https://web.whatsapp.com/*
-// @grant        none
+// @name WhatsApp Spammer By JJ + Drag-to-Select (Blue Cyber Tech)
+// @namespace graphen-fixed
+// @version 3.9.2
+// @description Insane WhatsApp Spammer + drag to select messages • now with full blue cyber-tech aesthetic (neon, matrix rain, glowing pulses)
+// @author JJ + Grok tweaks
+// @match https://web.whatsapp.com/*
+// @grant none
 // ==/UserScript==
-
 (function() {
     'use strict';
-
-    console.log("[CYBER-SPAMMER v3.9.2] Script execution started at " + new Date().toISOString());
-
-    const THEMES = {
-        'cyber-blue': { name: 'Cyber Blue', matrix: 'rgba(100,200,255,0.45)', neon: '#00bfff', pulse: 'rgba(0,191,255,', bg1: 'rgba(0,191,255,0.18)', bg2: 'rgba(0,50,150,0.22)', border: 'rgba(30,144,255,0.4)', panel: 'rgba(8,20,40,0.88)', glow: '#40c4ff' },
-        'hacker-green': { name: 'Hacker Green', matrix: 'rgba(0,255,0,0.45)', neon: '#00ff41', pulse: 'rgba(0,255,65,', bg1: 'rgba(0,255,100,0.12)', bg2: 'rgba(0,100,0,0.18)', border: 'rgba(0,255,0,0.35)', panel: 'rgba(0,10,0,0.88)', glow: '#00ff41' }
-    };
-
-    let themeKey = 'cyber-blue'; // forced default
-    const theme = THEMES[themeKey];
-
-    // Force CSS variables early
-    const root = document.documentElement;
-    root.style.setProperty('--neon', theme.neon);
-    root.style.setProperty('--pulse-start', `${theme.pulse}0)`);
-    root.style.setProperty('--pulse-mid', `${theme.pulse}0.7)`);
-    root.style.setProperty('--glow', theme.glow);
-
-    console.log("[CYBER-SPAMMER] Theme applied:", themeKey);
-
-    // ──────────────────────────────
-    // MATRIX RAIN
-    // ──────────────────────────────
-    function createMatrix(container) {
+    // ────────────────────────────────────────────────
+    // SPAMMER CORE (your original logic with minor prefixing)
+    // ────────────────────────────────────────────────
+    let SPAM_TEXT = localStorage.getItem('JJ_SPAM_TEXT') || "lol";
+    let INTERVAL_MS = parseInt(localStorage.getItem('JJ_INTERVAL_MS')) || 100;
+    let isBurstMode = localStorage.getItem('JJ_BURST') === 'true' || false;
+    let burstCount = parseInt(localStorage.getItem('JJ_BURST_COUNT')) || 10;
+    let burstCooldown = parseInt(localStorage.getItem('JJ_BURST_COOLDOWN')) || 2000;
+    let lightweightMode = localStorage.getItem('JJ_LIGHT') === 'true' || false;
+    let customHotkey = localStorage.getItem('JJ_HOTKEY') || '';
+    let spamBtn, settingsOverlay;
+    let isSpamming = false;
+    let spamTimer = null;
+    function getInput() {
+        return document.querySelector('[contenteditable="true"][data-tab="10"]');
+    }
+    function sendMessage() {
+        const input = getInput();
+        if (!input) return;
+        input.focus();
+        document.execCommand('insertText', false, SPAM_TEXT);
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+            bubbles: true,
+            cancelable: true,
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13
+        }));
+    }
+    function startSpam() {
+        if (isSpamming) return;
+        isSpamming = true;
+        spamBtn.textContent = 'SPAM: ON';
+        spamBtn.style.background = '#00bfff'; // bright cyber blue ON
+        spamBtn.style.boxShadow = '0 0 15px #00bfff';
+        spamBtn.style.animation = 'cyberPulse 1.4s infinite';
+        if (isBurstMode) {
+            burstSpamLoop();
+        } else {
+            spamTimer = setInterval(sendMessage, INTERVAL_MS);
+        }
+    }
+    function burstSpamLoop() {
+        let sent = 0;
+        spamTimer = setInterval(() => {
+            if (!isSpamming) return clearInterval(spamTimer);
+            sendMessage();
+            sent++;
+            if (sent >= burstCount) {
+                clearInterval(spamTimer);
+                sent = 0;
+                setTimeout(() => {
+                    if (isSpamming) burstSpamLoop();
+                }, burstCooldown);
+            }
+        }, INTERVAL_MS);
+    }
+    function stopSpam() {
+        isSpamming = false;
+        clearInterval(spamTimer);
+        spamTimer = null;
+        spamBtn.textContent = 'SPAM: OFF';
+        spamBtn.style.background = '#0d1b2a';
+        spamBtn.style.boxShadow = '0 0 8px #1e90ff';
+        spamBtn.style.animation = 'none';
+    }
+    function createSpamButton() {
+        if (spamBtn) return;
+        spamBtn = document.createElement('button');
+        spamBtn.textContent = 'SPAM: OFF';
+        Object.assign(spamBtn.style, {
+            position: 'fixed',
+            top: '16px',
+            right: '16px',
+            zIndex: 999999,
+            padding: '12px 20px',
+            fontWeight: 'bold',
+            color: '#e0f7ff',
+            background: '#0d1b2a',
+            border: '1px solid #1e90ff',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontFamily: 'Consolas, monospace',
+            boxShadow: '0 0 12px rgba(30,144,255,0.4)',
+            transition: 'all 0.3s'
+        });
+        spamBtn.onmouseover = () => {
+            spamBtn.style.boxShadow = '0 0 25px #00bfff';
+        };
+        spamBtn.onmouseout = () => {
+            spamBtn.style.boxShadow = '0 0 12px rgba(30,144,255,0.4)';
+        };
+        spamBtn.onclick = () => isSpamming ? stopSpam() : startSpam();
+        document.body.appendChild(spamBtn);
+    }
+    // ────────────────────────────────────────────────
+    // SETTINGS & TUTORIAL (blue cyber-tech style)
+    // ────────────────────────────────────────────────
+    function createSettingsOverlay() {
+        if (settingsOverlay) return;
+        settingsOverlay = document.createElement('div');
+        settingsOverlay.className = 'cyber-overlay';
         const canvas = document.createElement('canvas');
         canvas.className = 'cyber-matrix';
-        container.appendChild(canvas);
-        const ctx = canvas.getContext('2d');
-
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        resize();
-        window.addEventListener('resize', resize);
-
-        const font = 16;
-        const cols = Math.floor(canvas.width / font);
-        const drops = Array(cols).fill(1).map(() => Math.random() * canvas.height);
-
-        function draw() {
-            ctx.fillStyle = 'rgba(0,10,30,0.08)';
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = theme.matrix;
-            ctx.font = font + 'px Courier New';
-            drops.forEach((y, i) => {
-                ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), i * font, y);
-                drops[i] += font * 0.7;
-                if (drops[i] > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            });
-            requestAnimationFrame(draw);
-        }
-        draw();
-    }
-
-    // ──────────────────────────────
-    // THEME SELECTOR – FORCED & ULTRA VISIBLE
-    // ──────────────────────────────
-    function showThemeSelectorForced() {
-        console.log("[CYBER-SPAMMER] Creating theme selector overlay");
-
-        const overlay = document.createElement('div');
-        overlay.id = 'cyber-theme-selector';
-        overlay.className = 'cyber-overlay';
-        Object.assign(overlay.style, {
-            position: 'fixed',
-            inset: '0',
-            zIndex: '2147483647',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: '#000',
-            pointerEvents: 'all'
-        });
-
-        createMatrix(overlay);
-
+        settingsOverlay.appendChild(canvas);
         const panel = document.createElement('div');
         panel.className = 'cyber-panel';
         panel.innerHTML = `
-            <h2 style="margin-bottom:50px;">SELECT PROTOCOL</h2>
-            <button id="btn-cyber" style="margin:25px; padding:25px 60px; font-size:1.6em; min-width:300px; background:var(--neon); color:#000;">CYBER BLUE</button><br>
-            <button id="btn-hacker" style="margin:25px; padding:25px 60px; font-size:1.6em; min-width:300px; background:var(--neon); color:#000;">HACKER GREEN</button>
+            <h2>⚙️ CYBER SETTINGS</h2>
+            <label>Payload Message</label>
+            <textarea id="msg">${SPAM_TEXT}</textarea>
+            <label>Transmit Rate (msg/s) <span id="speedValue">${Math.round(1000/INTERVAL_MS)}</span></label>
+            <input id="speed" type="range" min="1" max="100" value="${Math.round(1000/INTERVAL_MS)}">
+            <div class="toggle-row">
+                <label for="burstToggle">Burst Protocol</label>
+                <input id="burstToggle" type="checkbox" ${isBurstMode ? 'checked' : ''}>
+            </div>
+            <div id="burstBox" style="opacity:${isBurstMode ? 1 : 0.5}">
+                <label>Burst Size</label>
+                <input id="burstCount" type="number" value="${burstCount}">
+                <label>Cooldown (ms)</label>
+                <input id="burstCooldown" type="number" value="${burstCooldown}">
+            </div>
+            <div class="toggle-row">
+                <label for="lightToggle">Stealth Mode</label>
+                <input id="lightToggle" type="checkbox" ${lightweightMode ? 'checked' : ''}>
+            </div>
+            <label>Activation Sequence (Hotkey)</label>
+            <input id="hotkeyInput" type="text" placeholder="Press key combo..." readonly value="${customHotkey}">
+            <span>Backspace to clear sequence</span>
+            <button id="closeSettings">TERMINATE</button>
         `;
-        overlay.appendChild(panel);
-
-        // Append to documentElement (higher in stack than body sometimes)
-        document.documentElement.appendChild(overlay);
-
-        // Force visibility loop
-        const forceVisible = setInterval(() => {
-            if (!document.getElementById('cyber-theme-selector')) {
-                clearInterval(forceVisible);
-                return;
+        settingsOverlay.appendChild(panel);
+        document.body.appendChild(settingsOverlay);
+        settingsOverlay.style.display = 'none';
+        settingsOverlay.onclick = e => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; };
+        panel.querySelector('#closeSettings').onclick = () => settingsOverlay.style.display = 'none';
+        // Blue Matrix Rain
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        if (!lightweightMode) {
+            const fontSize = 16;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = Array(columns).fill(0).map(() => Math.random() * canvas.height);
+            function drawMatrix() {
+                ctx.fillStyle = 'rgba(0, 10, 30, 0.08)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(100, 200, 255, 0.45)'; // bright cyan-blue
+                ctx.font = `${fontSize}px 'Courier New', monospace`;
+                for (let i = 0; i < drops.length; i++) {
+                    const text = String.fromCharCode(0x30A0 + Math.random() * 96); // katakana + numbers
+                    ctx.fillText(text, i * fontSize, drops[i]);
+                    drops[i] += fontSize * 0.7;
+                    if (drops[i] > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                }
+                requestAnimationFrame(drawMatrix);
             }
-            overlay.style.display = 'flex';
-            overlay.style.opacity = '1';
-            overlay.style.visibility = 'visible';
-            overlay.style.pointerEvents = 'all';
-            console.log("[CYBER-SPAMMER] Forcing theme selector visible");
-        }, 400);
-
-        // Stop forcing after 12 seconds
-        setTimeout(() => clearInterval(forceVisible), 12000);
-
-        // Buttons
-        panel.querySelector('#btn-cyber').onclick = () => {
-            localStorage.setItem('JJ_THEME', 'cyber-blue');
-            overlay.remove();
-            location.reload();
+            drawMatrix();
+        }
+        // Event listeners for controls (same logic)
+        const msgInput = panel.querySelector('#msg');
+        const speedInput = panel.querySelector('#speed');
+        const speedValue = panel.querySelector('#speedValue');
+        const burstToggle = panel.querySelector('#burstToggle');
+        const burstBox = panel.querySelector('#burstBox');
+        const burstCountInput = panel.querySelector('#burstCount');
+        const burstCooldownInput = panel.querySelector('#burstCooldown');
+        const lightToggle = panel.querySelector('#lightToggle');
+        const hotkeyInput = panel.querySelector('#hotkeyInput');
+        msgInput.oninput = e => { SPAM_TEXT = e.target.value || " "; localStorage.setItem('JJ_SPAM_TEXT', SPAM_TEXT); };
+        speedInput.oninput = e => {
+            INTERVAL_MS = Math.round(1000 / e.target.value);
+            speedValue.textContent = e.target.value;
+            localStorage.setItem('JJ_INTERVAL_MS', INTERVAL_MS);
+            if (isSpamming) stopSpam(), startSpam();
         };
-        panel.querySelector('#btn-hacker').onclick = () => {
-            localStorage.setItem('JJ_THEME', 'hacker-green');
-            overlay.remove();
-            location.reload();
+        burstToggle.onchange = e => {
+            isBurstMode = e.target.checked;
+            localStorage.setItem('JJ_BURST', isBurstMode);
+            burstBox.style.opacity = isBurstMode ? '1' : '0.5';
+            if (isSpamming) stopSpam(), startSpam();
         };
+        burstCountInput.oninput = e => { burstCount = +e.target.value; localStorage.setItem('JJ_BURST_COUNT', burstCount); };
+        burstCooldownInput.oninput = e => { burstCooldown = +e.target.value; localStorage.setItem('JJ_BURST_COOLDOWN', burstCooldown); };
+        lightToggle.onchange = e => { lightweightMode = e.target.checked; localStorage.setItem('JJ_LIGHT', lightweightMode); };
+        hotkeyInput.addEventListener('keydown', e => {
+            e.preventDefault();
+            if (e.key === "Backspace") {
+                hotkeyInput.value = ''; customHotkey = ''; localStorage.setItem('JJ_HOTKEY', '');
+            } else {
+                let combo = [];
+                if (e.ctrlKey) combo.push('Ctrl');
+                if (e.shiftKey) combo.push('Shift');
+                if (e.altKey) combo.push('Alt');
+                combo.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+                hotkeyInput.value = combo.join('+');
+                customHotkey = hotkeyInput.value;
+                localStorage.setItem('JJ_HOTKEY', customHotkey);
+            }
+        });
     }
-
-    // ──────────────────────────────
-    // GLOBAL STYLES
-    // ──────────────────────────────
-    const st = document.createElement('style');
-    st.textContent = `
-        .cyber-overlay { display: flex !important; }
-        .cyber-matrix { pointer-events: none; }
+    function showTutorial() {
+        const overlay = document.createElement('div');
+        overlay.className = 'cyber-overlay';
+        const canvas = document.createElement('canvas');
+        canvas.className = 'cyber-matrix';
+        overlay.appendChild(canvas);
+        const neon = document.createElement('div');
+        neon.className = 'cyber-neon';
+        neon.textContent = 'WHATSAPP CYBER SPAMMER v3.8';
+        overlay.appendChild(neon);
+        const box = document.createElement('div');
+        box.className = 'cyber-panel';
+        box.innerHTML = `
+            <h2>INITIALIZATION SEQUENCE</h2>
+            <p>• ACTIVATE SPAM MODULE → click <b>SPAM</b></p>
+            <p>• ACCESS CONSOLE → <b>Ctrl + S</b></p>
+            <p>• CONFIGURE PAYLOAD, RATE, BURST, SEQUENCE</p>
+            <p style="opacity:0.7; font-size:0.9em;">NODE: JJ • 2026</p>
+            <button id="closeTut">CONFIRM ACCESS</button>
+        `;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+        box.querySelector('#closeTut').onclick = () => {
+            overlay.remove();
+        };
+        // Same blue matrix rain
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+        if (!lightweightMode) {
+            const fontSize = 16;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = Array(columns).fill(0).map(() => Math.random() * canvas.height);
+            function draw() {
+                ctx.fillStyle = 'rgba(0,10,30,0.08)';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = 'rgba(100,200,255,0.45)';
+                ctx.font = `${fontSize}px 'Courier New', monospace`;
+                for (let i = 0; i < drops.length; i++) {
+                    const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+                    ctx.fillText(text, i * fontSize, drops[i]);
+                    drops[i] += fontSize * 0.7;
+                    if (drops[i] > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    }
+    // ────────────────────────────────────────────────
+    // CYBER STYLES
+    // ────────────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes cyberPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0,191,255,0.4); }
+            50% { box-shadow: 0 0 30px 10px rgba(0,191,255,0.7); }
+        }
+        @keyframes glitch {
+            0%,100% { text-shadow: 0 0 5px #00bfff; }
+            20% { text-shadow: 2px 0 #ff00aa, -2px 0 #00ffea; }
+            40% { text-shadow: -2px 0 #ff00aa, 2px 0 #00ffea; }
+        }
+        .cyber-overlay {
+            position: fixed; inset: 0; z-index: 100001;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 20%, rgba(0,191,255,0.18), transparent 70%),
+                        radial-gradient(circle at 70% 80%, rgba(0,50,150,0.22), transparent 70%),
+                        #000814;
+            background-size: 300% 300%; animation: smokeFlow 25s ease-in-out infinite;
+            overflow: hidden;
+        }
+        .cyber-matrix { position: absolute; inset: 0; opacity: 0.7; }
+        .cyber-neon {
+            position: relative; z-index: 2; margin-bottom: 30px;
+            font-size: 42px; font-weight: 900; font-family: 'Courier New', monospace;
+            color: #00bfff; text-shadow: 0 0 10px #00bfff, 0 0 20px #00bfff, 0 0 40px #1e90ff;
+            animation: glitch 3s infinite;
+        }
         .cyber-panel {
-            background: var(--panel); color: white; border: 2px solid var(--neon);
-            border-radius: 12px; box-shadow: 0 0 60px var(--neon)80;
-            padding: 40px; text-align: center; font-family: Consolas, monospace;
+            position: relative; z-index: 2; background: rgba(8, 20, 40, 0.88);
+            color: #e0f7ff; padding: 28px; border-radius: 10px; width: 460px; max-width: 92%;
+            max-height: 85vh; overflow-y: auto; font-family: 'Courier New', Consolas, monospace;
+            box-shadow: 0 0 30px rgba(30,144,255,0.35), inset 0 0 15px rgba(100,200,255,0.1);
+            border: 1px solid rgba(30,144,255,0.4);
+        }
+        .cyber-panel h2 { color: #40c4ff; text-shadow: 0 0 8px #40c4ff; margin-top: 0; }
+        .cyber-panel label { color: #80deea; margin: 12px 0 4px; display: block; }
+        .cyber-panel input, .cyber-panel textarea {
+            background: #0a1f3a; color: #e3f2fd; border: 1px solid #1e88e5;
+            border-radius: 4px; padding: 8px; font-family: inherit;
         }
         .cyber-panel button {
-            background: var(--neon); color: black; border: none;
-            padding: 20px 50px; font-size: 1.4em; margin: 20px;
-            border-radius: 8px; cursor: pointer;
+            background: linear-gradient(135deg, #00bfff, #1e90ff);
+            color: white; border: none; padding: 12px; border-radius: 6px;
+            cursor: pointer; font-weight: bold; margin-top: 16px; width: 100%;
+            box-shadow: 0 0 15px rgba(0,191,255,0.5);
+            transition: all 0.3s;
         }
-        .cyber-panel button:hover { transform: scale(1.08); box-shadow: 0 0 40px var(--neon); }
+        .cyber-panel button:hover { box-shadow: 0 0 30px rgba(0,191,255,0.8); transform: scale(1.02); }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 12px 0; }
+        .cyber-panel span { font-size: 0.85em; color: #81d4fa; }
     `;
-    document.head.appendChild(st);
-
-    // ──────────────────────────────
-    // START – FORCE SELECTOR VERY EARLY
-    // ──────────────────────────────
-    console.log("[CYBER-SPAMMER] Forcing theme selector immediately");
-
-    // Show it right now
-    showThemeSelectorForced();
-
-    // Keep trying every 1 second for 30 seconds in case WhatsApp removes it
-    let attempts = 0;
-    const retryInterval = setInterval(() => {
-        attempts++;
-        if (document.getElementById('cyber-theme-selector')) {
-            console.log("[CYBER-SPAMMER] Selector still present after " + attempts + " checks");
-        } else {
-            console.log("[CYBER-SPAMMER] Selector was removed → recreating");
-            showThemeSelectorForced();
+    document.head.appendChild(style);
+    // ────────────────────────────────────────────────
+    // HOTKEYS & INIT
+    // ────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+        if (document.activeElement?.id === 'hotkeyInput') return;
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            if (!settingsOverlay) createSettingsOverlay();
+            settingsOverlay.style.display = settingsOverlay.style.display === 'flex' ? 'none' : 'flex';
         }
-        if (attempts >= 30) clearInterval(retryInterval);
-    }, 1000);
-
+        if (!customHotkey) return;
+        const keys = customHotkey.split('+');
+        let match = (!keys.includes('Ctrl') || e.ctrlKey) &&
+                    (!keys.includes('Shift') || e.shiftKey) &&
+                    (!keys.includes('Alt') || e.altKey) &&
+                    keys.includes(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+        if (match) {
+            e.preventDefault();
+            isSpamming ? stopSpam() : startSpam();
+        }
+    });
+    showTutorial();
+    const observer = new MutationObserver(() => {
+        if (getInput()) {
+            createSpamButton();
+            createSettingsOverlay(); // pre-create so Ctrl+S is instant
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    // ────────────────────────────────────────────────
+    // DRAG-TO-SELECT (unchanged from working version)
+    // ────────────────────────────────────────────────
+    let drag_isDragging = false;
+    let drag_startBubble = null;
+    let drag_chatArea = null;
+    function drag_findChatArea() {
+        return document.querySelector('#main div[role="list"], div[data-testid*="conversation-panel"], main > div > div:nth-child(2), #main');
+    }
+    function drag_getBubbles() {
+        if (!drag_chatArea) return [];
+        return Array.from(drag_chatArea.querySelectorAll(
+            'div[role="row"], div[data-pre-plain-text], div.message-in, div.message-out, div.selectable'
+        ));
+    }
+    function drag_isSelectMode() {
+        return !!document.querySelector('input[type="checkbox"][aria-checked]');
+    }
+    function drag_getCheckboxInBubble(bubble) {
+        return bubble.querySelector('input[type="checkbox"][aria-checked]');
+    }
+    function drag_toggleBubble(bubble) {
+        const cb = drag_getCheckboxInBubble(bubble);
+        if (cb && !cb.checked) cb.click();
+    }
+    function drag_selectRange(start, current) {
+        const bubbles = drag_getBubbles();
+        const sIdx = bubbles.indexOf(start);
+        const cIdx = bubbles.indexOf(current);
+        if (sIdx < 0 || cIdx < 0) return;
+        const min = Math.min(sIdx, cIdx), max = Math.max(sIdx, cIdx);
+        for (let i = min; i <= max; i++) drag_toggleBubble(bubbles[i]);
+    }
+    function drag_mouseDown(e) {
+        if (!drag_isSelectMode()) return;
+        const bubble = e.target.closest('div[role="row"], div[data-pre-plain-text], div[class*="message"], div.selectable');
+        if (bubble) {
+            drag_isDragging = true;
+            drag_startBubble = bubble;
+            drag_toggleBubble(bubble);
+            e.preventDefault();
+        }
+    }
+    function drag_mouseMove(e) {
+        if (!drag_isDragging) return;
+        const bubble = e.target.closest('div[role="row"], div[data-pre-plain-text], div[class*="message"], div.selectable');
+        if (bubble && bubble !== drag_startBubble) {
+            drag_selectRange(drag_startBubble, bubble);
+        }
+    }
+    function drag_mouseUp() {
+        drag_isDragging = false;
+        drag_startBubble = null;
+    }
+    function drag_attach() {
+        drag_chatArea = drag_findChatArea();
+        if (drag_chatArea && !drag_chatArea._dragAttached) {
+            drag_chatArea.addEventListener('mousedown', drag_mouseDown, true);
+            drag_chatArea.addEventListener('mousemove', drag_mouseMove, true);
+            document.addEventListener('mouseup', drag_mouseUp, true);
+            drag_chatArea._dragAttached = true;
+        }
+    }
+    new MutationObserver(drag_attach).observe(document.body, { childList: true, subtree: true });
+    drag_attach();
+    setInterval(drag_attach, 3000);
 })();
