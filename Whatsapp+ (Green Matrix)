@@ -1,0 +1,169 @@
+// ==UserScript==
+// @name         WhatsApp Cyber Spammer + Drag Select (Green Matrix)
+// @namespace    graphen-fixed
+// @version      3.9.2
+// @description  Spammer + drag select • theme selector forced every load with extreme visibility fixes
+// @match        https://web.whatsapp.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    console.log("[CYBER-SPAMMER v3.9.2] Script execution started at " + new Date().toISOString());
+
+    const THEMES = {
+        'cyber-blue': { name: 'Cyber Blue', matrix: 'rgba(100,200,255,0.45)', neon: '#00bfff', pulse: 'rgba(0,191,255,', bg1: 'rgba(0,191,255,0.18)', bg2: 'rgba(0,50,150,0.22)', border: 'rgba(30,144,255,0.4)', panel: 'rgba(8,20,40,0.88)', glow: '#40c4ff' },
+        'hacker-green': { name: 'Hacker Green', matrix: 'rgba(0,255,0,0.45)', neon: '#00ff41', pulse: 'rgba(0,255,65,', bg1: 'rgba(0,255,100,0.12)', bg2: 'rgba(0,100,0,0.18)', border: 'rgba(0,255,0,0.35)', panel: 'rgba(0,10,0,0.88)', glow: '#00ff41' }
+    };
+
+    let themeKey = 'cyber-blue'; // forced default
+    const theme = THEMES[themeKey];
+
+    // Force CSS variables early
+    const root = document.documentElement;
+    root.style.setProperty('--neon', theme.neon);
+    root.style.setProperty('--pulse-start', `${theme.pulse}0)`);
+    root.style.setProperty('--pulse-mid', `${theme.pulse}0.7)`);
+    root.style.setProperty('--glow', theme.glow);
+
+    console.log("[CYBER-SPAMMER] Theme applied:", themeKey);
+
+    // ──────────────────────────────
+    // MATRIX RAIN
+    // ──────────────────────────────
+    function createMatrix(container) {
+        const canvas = document.createElement('canvas');
+        canvas.className = 'cyber-matrix';
+        container.appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+
+        const font = 16;
+        const cols = Math.floor(canvas.width / font);
+        const drops = Array(cols).fill(1).map(() => Math.random() * canvas.height);
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0,10,30,0.08)';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = theme.matrix;
+            ctx.font = font + 'px Courier New';
+            drops.forEach((y, i) => {
+                ctx.fillText(String.fromCharCode(0x30A0 + Math.random() * 96), i * font, y);
+                drops[i] += font * 0.7;
+                if (drops[i] > canvas.height && Math.random() > 0.975) drops[i] = 0;
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    }
+
+    // ──────────────────────────────
+    // THEME SELECTOR – FORCED & ULTRA VISIBLE
+    // ──────────────────────────────
+    function showThemeSelectorForced() {
+        console.log("[CYBER-SPAMMER] Creating theme selector overlay");
+
+        const overlay = document.createElement('div');
+        overlay.id = 'cyber-theme-selector';
+        overlay.className = 'cyber-overlay';
+        Object.assign(overlay.style, {
+            position: 'fixed',
+            inset: '0',
+            zIndex: '2147483647',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: '#000',
+            pointerEvents: 'all'
+        });
+
+        createMatrix(overlay);
+
+        const panel = document.createElement('div');
+        panel.className = 'cyber-panel';
+        panel.innerHTML = `
+            <h2 style="margin-bottom:50px;">SELECT PROTOCOL</h2>
+            <button id="btn-cyber" style="margin:25px; padding:25px 60px; font-size:1.6em; min-width:300px; background:var(--neon); color:#000;">CYBER BLUE</button><br>
+            <button id="btn-hacker" style="margin:25px; padding:25px 60px; font-size:1.6em; min-width:300px; background:var(--neon); color:#000;">HACKER GREEN</button>
+        `;
+        overlay.appendChild(panel);
+
+        // Append to documentElement (higher in stack than body sometimes)
+        document.documentElement.appendChild(overlay);
+
+        // Force visibility loop
+        const forceVisible = setInterval(() => {
+            if (!document.getElementById('cyber-theme-selector')) {
+                clearInterval(forceVisible);
+                return;
+            }
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+            overlay.style.visibility = 'visible';
+            overlay.style.pointerEvents = 'all';
+            console.log("[CYBER-SPAMMER] Forcing theme selector visible");
+        }, 400);
+
+        // Stop forcing after 12 seconds
+        setTimeout(() => clearInterval(forceVisible), 12000);
+
+        // Buttons
+        panel.querySelector('#btn-cyber').onclick = () => {
+            localStorage.setItem('JJ_THEME', 'cyber-blue');
+            overlay.remove();
+            location.reload();
+        };
+        panel.querySelector('#btn-hacker').onclick = () => {
+            localStorage.setItem('JJ_THEME', 'hacker-green');
+            overlay.remove();
+            location.reload();
+        };
+    }
+
+    // ──────────────────────────────
+    // GLOBAL STYLES
+    // ──────────────────────────────
+    const st = document.createElement('style');
+    st.textContent = `
+        .cyber-overlay { display: flex !important; }
+        .cyber-matrix { pointer-events: none; }
+        .cyber-panel {
+            background: var(--panel); color: white; border: 2px solid var(--neon);
+            border-radius: 12px; box-shadow: 0 0 60px var(--neon)80;
+            padding: 40px; text-align: center; font-family: Consolas, monospace;
+        }
+        .cyber-panel button {
+            background: var(--neon); color: black; border: none;
+            padding: 20px 50px; font-size: 1.4em; margin: 20px;
+            border-radius: 8px; cursor: pointer;
+        }
+        .cyber-panel button:hover { transform: scale(1.08); box-shadow: 0 0 40px var(--neon); }
+    `;
+    document.head.appendChild(st);
+
+    // ──────────────────────────────
+    // START – FORCE SELECTOR VERY EARLY
+    // ──────────────────────────────
+    console.log("[CYBER-SPAMMER] Forcing theme selector immediately");
+
+    // Show it right now
+    showThemeSelectorForced();
+
+    // Keep trying every 1 second for 30 seconds in case WhatsApp removes it
+    let attempts = 0;
+    const retryInterval = setInterval(() => {
+        attempts++;
+        if (document.getElementById('cyber-theme-selector')) {
+            console.log("[CYBER-SPAMMER] Selector still present after " + attempts + " checks");
+        } else {
+            console.log("[CYBER-SPAMMER] Selector was removed → recreating");
+            showThemeSelectorForced();
+        }
+        if (attempts >= 30) clearInterval(retryInterval);
+    }, 1000);
+
+})();
