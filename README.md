@@ -29,8 +29,8 @@ Here are screenshots of the different modes in action on WhatsApp Web:
 ![Matrix Settings](screenshots/matrix-settings.png)
 
 ### Cyber Tech (Blue)
-![Cyber Settings Panel](screenshots/cyber-settings.png)
-![Cyber Popup Overlay](screenshots/cyber-popup.png)
+<img width="1918" height="868" alt="Screenshot 2026-02-22 121317" src="https://github.com/user-attachments/assets/88d724ca-3cc0-415b-be31-bfde6a03720c" />
+<img width="1919" height="868" alt="Screenshot 2026-02-22 121338" src="https://github.com/user-attachments/assets/199d6fc4-28f7-4951-9833-334dc91c92da" />
 
 ### Lightning (Yellow)
 <img width="1919" height="873" alt="Screenshot 2026-02-22 134838" src="https://github.com/user-attachments/assets/c460db81-4bc5-4c59-8332-396bc856e313" />
