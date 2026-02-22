@@ -25,8 +25,8 @@
 Here are screenshots of the different modes in action on WhatsApp Web:
 
 ### Matrix (Green)
-![Matrix Welcome Popup](screenshots/matrix-welcome.png)
-![Matrix Settings](screenshots/matrix-settings.png)
+<img width="1919" height="876" alt="Screenshot 2026-02-22 121402" src="https://github.com/user-attachments/assets/6c997f09-c79e-47b6-a743-7c12abcd8d15" />
+<img width="1919" height="869" alt="Screenshot 2026-02-22 121416" src="https://github.com/user-attachments/assets/4b68d795-abc5-4f81-b4fc-7bafe73a3022" />
 
 ### Cyber Tech (Blue)
 <img width="1918" height="868" alt="Screenshot 2026-02-22 121317" src="https://github.com/user-attachments/assets/88d724ca-3cc0-415b-be31-bfde6a03720c" />
