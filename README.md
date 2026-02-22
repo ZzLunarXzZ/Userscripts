@@ -1,7 +1,4 @@
 # 🚀 Userscripts
-
-Simple collection of userscripts — mainly WhatsApp Web enhancements with custom themes.
-
 ## 📥 How to Install
 
 1. Install a userscript manager:
@@ -41,4 +38,4 @@ Here are screenshots of the different modes in action on WhatsApp Web:
 
 > ⚠️ **Disclaimer**: Bulk/automated messaging can violate WhatsApp's Terms of Service and may result in account restrictions or bans. Use responsibly, for personal testing or with consent only.
 
-Made with care by J — star ⭐ if useful!
+
