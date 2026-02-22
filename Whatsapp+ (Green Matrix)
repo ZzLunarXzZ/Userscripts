@@ -2,7 +2,7 @@
 // @name         WhatsApp Spammer By JJ + Drag-to-Select (Green Matrix)
 // @namespace    graphen-fixed
 // @version      3.9.2
-// @description  Insane WhatsApp Spammer 
+// @description  Insane WhatsApp Spammer
 // @match        https://web.whatsapp.com/*
 // @grant        none
 // ==/UserScript==
@@ -47,7 +47,83 @@
       keyCode: 13
     }));
   }
+// ────────────────────────────────────────────────
+// DRAG-TO-SELECT (added from blue cyber version)
+// ────────────────────────────────────────────────
+let drag_isDragging = false;
+let drag_startBubble = null;
+let drag_chatArea = null;
 
+function drag_findChatArea() {
+    return document.querySelector('#main div[role="list"], div[data-testid*="conversation-panel"], main > div > div:nth-child(2), #main');
+}
+
+function drag_getBubbles() {
+    if (!drag_chatArea) return [];
+    return Array.from(drag_chatArea.querySelectorAll(
+        'div[role="row"], div[data-pre-plain-text], div.message-in, div.message-out, div.selectable'
+    ));
+}
+
+function drag_isSelectMode() {
+    return !!document.querySelector('input[type="checkbox"][aria-checked]');
+}
+
+function drag_getCheckboxInBubble(bubble) {
+    return bubble.querySelector('input[type="checkbox"][aria-checked]');
+}
+
+function drag_toggleBubble(bubble) {
+    const cb = drag_getCheckboxInBubble(bubble);
+    if (cb && !cb.checked) cb.click();
+}
+
+function drag_selectRange(start, current) {
+    const bubbles = drag_getBubbles();
+    const sIdx = bubbles.indexOf(start);
+    const cIdx = bubbles.indexOf(current);
+    if (sIdx < 0 || cIdx < 0) return;
+    const min = Math.min(sIdx, cIdx), max = Math.max(sIdx, cIdx);
+    for (let i = min; i <= max; i++) drag_toggleBubble(bubbles[i]);
+}
+
+function drag_mouseDown(e) {
+    if (!drag_isSelectMode()) return;
+    const bubble = e.target.closest('div[role="row"], div[data-pre-plain-text], div[class*="message"], div.selectable');
+    if (bubble) {
+        drag_isDragging = true;
+        drag_startBubble = bubble;
+        drag_toggleBubble(bubble);
+        e.preventDefault();
+    }
+}
+
+function drag_mouseMove(e) {
+    if (!drag_isDragging) return;
+    const bubble = e.target.closest('div[role="row"], div[data-pre-plain-text], div[class*="message"], div.selectable');
+    if (bubble && bubble !== drag_startBubble) {
+        drag_selectRange(drag_startBubble, bubble);
+    }
+}
+
+function drag_mouseUp() {
+    drag_isDragging = false;
+    drag_startBubble = null;
+}
+
+function drag_attach() {
+    drag_chatArea = drag_findChatArea();
+    if (drag_chatArea && !drag_chatArea._dragAttached) {
+        drag_chatArea.addEventListener('mousedown', drag_mouseDown, true);
+        drag_chatArea.addEventListener('mousemove', drag_mouseMove, true);
+        document.addEventListener('mouseup', drag_mouseUp, true);
+        drag_chatArea._dragAttached = true;
+    }
+}
+
+new MutationObserver(drag_attach).observe(document.body, { childList: true, subtree: true });
+drag_attach();
+setInterval(drag_attach, 3000);
   /* =======================
      SPAM CONTROL
   ======================= */
