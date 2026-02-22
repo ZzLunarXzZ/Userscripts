@@ -25,16 +25,16 @@
 Here are screenshots of the different modes in action on WhatsApp Web:
 
 ### Matrix (Green)
-<img width="1919" height="876" alt="Screenshot 2026-02-22 121402" src="https://github.com/user-attachments/assets/6c997f09-c79e-47b6-a743-7c12abcd8d15" />
-<img width="1919" height="869" alt="Screenshot 2026-02-22 121416" src="https://github.com/user-attachments/assets/4b68d795-abc5-4f81-b4fc-7bafe73a3022" />
+<img src="https://github.com/user-attachments/assets/6c997f09-c79e-47b6-a743-7c12abcd8d15" width="48%" alt="Matrix mode - main chat view">
+<img src="https://github.com/user-attachments/assets/4b68d795-abc5-4f81-b4fc-7bafe73a3022" width="48%" alt="Matrix mode - settings / spam panel">
 
 ### Cyber Tech (Blue)
-<img width="1918" height="868" alt="Screenshot 2026-02-22 121317" src="https://github.com/user-attachments/assets/88d724ca-3cc0-415b-be31-bfde6a03720c" />
-<img width="1919" height="868" alt="Screenshot 2026-02-22 121338" src="https://github.com/user-attachments/assets/199d6fc4-28f7-4951-9833-334dc91c92da" />
+<img src="https://github.com/user-attachments/assets/88d724ca-3cc0-415b-be31-bfde6a03720c" width="48%" alt="Cyber Tech mode - main interface">
+<img src="https://github.com/user-attachments/assets/199d6fc4-28f7-4951-9833-334dc91c92da" width="48%" alt="Cyber Tech mode - overlay / popup">
 
 ### Lightning (Yellow)
-<img width="1919" height="873" alt="Screenshot 2026-02-22 134838" src="https://github.com/user-attachments/assets/c460db81-4bc5-4c59-8332-396bc856e313" />
-<img width="1919" height="872" alt="Screenshot 2026-02-22 134902" src="https://github.com/user-attachments/assets/39d07e2a-c349-49db-bb5a-f45f721a5a73" />
+<img src="https://github.com/user-attachments/assets/c460db81-4bc5-4c59-8332-396bc856e313" width="48%" alt="Lightning mode - chat screen">
+<img src="https://github.com/user-attachments/assets/39d07e2a-c349-49db-bb5a-f45f721a5a73" width="48%" alt="Lightning mode - forward selection box">
 
 
 
