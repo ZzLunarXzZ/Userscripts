@@ -39,6 +39,3 @@ Here are screenshots of the different modes in action on WhatsApp Web:
 
 
 > ⚠️ **Disclaimer**: Bulk/automated messaging can violate WhatsApp's Terms of Service and may result in account restrictions or bans. Use responsibly, for personal testing or with consent only.
-
-
-
