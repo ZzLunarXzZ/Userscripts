@@ -35,9 +35,10 @@ Here are screenshots of the different modes in action on WhatsApp Web:
 ### Lightning (Yellow)
 <img src="https://github.com/user-attachments/assets/c460db81-4bc5-4c59-8332-396bc856e313" width="48%" alt="Lightning mode - chat screen">
 <img src="https://github.com/user-attachments/assets/39d07e2a-c349-49db-bb5a-f45f721a5a73" width="48%" alt="Lightning mode - forward selection box">
+
 ### Poison (Purple)
-<img width="1919" height="868" alt="Screenshot 2026-02-23 212311" src="https://github.com/user-attachments/assets/7e211d9b-944a-44c7-bb31-49fe1daf34be" />
-<img width="1919" height="875" alt="Screenshot 2026-02-23 212359" src="https://github.com/user-attachments/assets/6888a8cd-65b6-4011-bc75-3f38f6aeae26" />
+<img src="https://github.com/user-attachments/assets/7e211d9b-944a-44c7-bb31-49fe1daf34be" width="48%" alt="Poison mode - main chat view">
+<img src="https://github.com/user-attachments/assets/6888a8cd-65b6-4011-bc75-3f38f6aeae26" width="48%" alt="Poison mode - settings / spam panel">
 
 
 > ⚠️ **Disclaimer**: Bulk/automated messaging can violate WhatsApp's Terms of Service and may result in account restrictions or bans. Use responsibly, for personal testing or with consent only.
