@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name WhatsApp+ (Yellow Lightning)
-// @namespace graphen-fixed
-// @version 3.9.2
-// @description Insane WhatsApp Spammer – Lightning Edition
-// @match https://web.whatsapp.com/*
-// @grant none
+// @name         WhatsApp+ (Yellow Lightning)
+// @namespace    graphen-fixed
+// @version      3.9.2
+// @description  Insane WhatsApp Spammer
+// @match        https://web.whatsapp.com/*
+// @grant        none
 // ==/UserScript==
 
 (function() {
