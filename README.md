@@ -19,7 +19,7 @@
 - **Cyber Tech** (Blue) — futuristic console style
 - **Matrix** (Green) — classic digital rain aesthetic
 - **Lightning** (Yellow) — electric discharge theme
-
+- **Poison** (Purple) — poison venom drip
 ## 📸 Previews
 
 Here are screenshots of the different modes in action on WhatsApp Web:
