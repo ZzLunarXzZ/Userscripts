@@ -1,0 +1,375 @@
+// ==UserScript==
+// @name         WhatsApp+ (Purple Poison)
+// @namespace    graphen-fixed
+// @version      3.9.2
+// @description  Insane WhatsApp Spammer
+// @match        https://web.whatsapp.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // ────────────────────────────────────────────────
+    // STATE (identical)
+    // ────────────────────────────────────────────────
+    let SPAM_TEXT = localStorage.getItem('JJ_SPAM_TEXT') || "lol";
+    let INTERVAL_MS = parseInt(localStorage.getItem('JJ_INTERVAL_MS')) || 100;
+    let isBurstMode = localStorage.getItem('JJ_BURST') === 'true' || false;
+    let burstCount = parseInt(localStorage.getItem('JJ_BURST_COUNT')) || 10;
+    let burstCooldown = parseInt(localStorage.getItem('JJ_BURST_COOLDOWN')) || 2000;
+    let lightweightMode = localStorage.getItem('JJ_LIGHT') === 'true' || false;
+    let customHotkey = localStorage.getItem('JJ_HOTKEY') || '';
+    let spamBtn, settingsOverlay;
+    let isSpamming = false;
+    let spamTimer = null;
+
+    // ────────────────────────────────────────────────
+    // CORE SPAM FUNCTIONS (unchanged)
+    // ────────────────────────────────────────────────
+    function getInput() {
+        return document.querySelector('[contenteditable="true"][data-tab="10"]');
+    }
+
+    function sendMessage() {
+        const input = getInput();
+        if (!input) return;
+        input.focus();
+        document.execCommand('insertText', false, SPAM_TEXT);
+        input.dispatchEvent(new KeyboardEvent('keydown', {
+            bubbles: true, cancelable: true, key: 'Enter', code: 'Enter', keyCode: 13
+        }));
+    }
+
+    function startSpam() {
+        if (isSpamming) return;
+        isSpamming = true;
+        spamBtn.textContent = 'POISON: INFECTING';
+        spamBtn.style.background = '#e040fb';
+        spamBtn.style.color = '#000';
+        spamBtn.style.boxShadow = '0 0 30px #c2185b';
+        spamBtn.style.animation = 'venomPulse 1.5s infinite';
+        if (isBurstMode) burstSpamLoop();
+        else spamTimer = setInterval(sendMessage, INTERVAL_MS);
+    }
+
+    function burstSpamLoop() {
+        let sent = 0;
+        spamTimer = setInterval(() => {
+            if (!isSpamming) return clearInterval(spamTimer);
+            sendMessage();
+            sent++;
+            if (sent >= burstCount) {
+                clearInterval(spamTimer);
+                sent = 0;
+                setTimeout(() => { if (isSpamming) burstSpamLoop(); }, burstCooldown);
+            }
+        }, INTERVAL_MS);
+    }
+
+    function stopSpam() {
+        isSpamming = false;
+        clearInterval(spamTimer);
+        spamTimer = null;
+        spamBtn.textContent = 'POISON: QUARANTINE';
+        spamBtn.style.background = '#1a0033';
+        spamBtn.style.color = '#d500f9';
+        spamBtn.style.boxShadow = '0 0 15px #7b1fa2';
+        spamBtn.style.animation = 'none';
+    }
+
+    function createSpamButton() {
+        if (spamBtn) return;
+        spamBtn = document.createElement('button');
+        spamBtn.textContent = 'POISON: QUARANTINE';
+        Object.assign(spamBtn.style, {
+            position: 'fixed', top: '16px', right: '16px', zIndex: 999999,
+            padding: '12px 24px', fontWeight: 'bold', fontFamily: 'Consolas, monospace',
+            color: '#d500f9', background: '#1a0033', border: '2px solid #ab47bc',
+            borderRadius: '8px', cursor: 'pointer',
+            boxShadow: '0 0 18px #7b1fa2', transition: 'all 0.3s'
+        });
+        spamBtn.onmouseover = () => {
+            spamBtn.style.boxShadow = '0 0 40px #e040fb';
+            spamBtn.style.transform = 'scale(1.06)';
+        };
+        spamBtn.onmouseout = () => {
+            spamBtn.style.boxShadow = '0 0 18px #7b1fa2';
+            spamBtn.style.transform = 'scale(1)';
+        };
+        spamBtn.onclick = () => isSpamming ? stopSpam() : startSpam();
+        document.body.appendChild(spamBtn);
+    }
+
+    // ────────────────────────────────────────────────
+    // SETTINGS OVERLAY – Poison Purple style
+    // ────────────────────────────────────────────────
+    function createSettingsOverlay() {
+        if (settingsOverlay) return;
+        settingsOverlay = document.createElement('div');
+        settingsOverlay.className = 'poison-overlay';
+        const canvas = document.createElement('canvas');
+        canvas.className = 'poison-matrix';
+        settingsOverlay.appendChild(canvas);
+
+        const panel = document.createElement('div');
+        panel.className = 'poison-panel';
+        panel.innerHTML = `
+            <h2>☠️ POISON PROTOCOL</h2>
+            <label>Toxin Payload</label>
+            <textarea id="msg">${SPAM_TEXT}</textarea>
+            <label>Spread Rate (msg/s) <span id="speedValue">${Math.round(1000/INTERVAL_MS)}</span></label>
+            <input id="speed" type="range" min="1" max="50" value="${Math.round(1000/INTERVAL_MS)}">
+            <div class="toggle-row">
+                <label for="burstToggle">Plague Burst</label>
+                <input id="burstToggle" type="checkbox" ${isBurstMode ? 'checked' : ''}>
+            </div>
+            <div id="burstBox" style="opacity:${isBurstMode ? 1 : 0.5}">
+                <label>Infection Count</label>
+                <input id="burstCount" type="number" value="${burstCount}">
+                <label>Incubation (ms)</label>
+                <input id="burstCooldown" type="number" value="${burstCooldown}">
+            </div>
+            <div class="toggle-row">
+                <label for="lightToggle">Containment Mode</label>
+                <input id="lightToggle" type="checkbox" ${lightweightMode ? 'checked' : ''}>
+            </div>
+            <label>Activation Vector</label>
+            <input id="hotkeyInput" type="text" placeholder="Enter sequence..." readonly value="${customHotkey}">
+            <span>Backspace = neutralize</span>
+            <button id="closeSettings">CONTAIN</button>
+        `;
+        settingsOverlay.appendChild(panel);
+        document.body.appendChild(settingsOverlay);
+
+        settingsOverlay.style.display = 'none';
+        settingsOverlay.onclick = e => { if (e.target === settingsOverlay) settingsOverlay.style.display = 'none'; };
+        panel.querySelector('#closeSettings').onclick = () => settingsOverlay.style.display = 'none';
+
+        // ── Poison Purple Matrix Rain ──
+        const ctx = canvas.getContext('2d');
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        if (!lightweightMode) {
+            const fontSize = 16;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = Array(columns).fill(0).map(() => Math.random() * canvas.height);
+            const chars = '☠️🧪💀毒毒毒~≈≈≈0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$%#&@毒';
+
+            function drawPoison() {
+                ctx.fillStyle = 'rgba(30, 0, 50, 0.10)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(224, 64, 251, 0.50)'; // neon purple
+                ctx.font = `${fontSize}px Consolas, monospace`;
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i]);
+                    drops[i] += fontSize * 0.5; // slower, "dripping" feel
+                    if (drops[i] > canvas.height && Math.random() > 0.97) drops[i] = 0;
+                }
+                requestAnimationFrame(drawPoison);
+            }
+            drawPoison();
+        }
+
+        // Controls (same as before)
+        const msgInput = panel.querySelector('#msg');
+        const speedInput = panel.querySelector('#speed');
+        const speedValue = panel.querySelector('#speedValue');
+        const burstToggle = panel.querySelector('#burstToggle');
+        const burstBox = panel.querySelector('#burstBox');
+        const burstCountInput = panel.querySelector('#burstCount');
+        const burstCooldownInput = panel.querySelector('#burstCooldown');
+        const lightToggle = panel.querySelector('#lightToggle');
+        const hotkeyInput = panel.querySelector('#hotkeyInput');
+
+        msgInput.oninput = e => { SPAM_TEXT = e.target.value || " "; localStorage.setItem('JJ_SPAM_TEXT', SPAM_TEXT); };
+        speedInput.oninput = e => {
+            INTERVAL_MS = Math.round(1000 / e.target.value);
+            speedValue.textContent = e.target.value;
+            localStorage.setItem('JJ_INTERVAL_MS', INTERVAL_MS);
+            if (isSpamming) { stopSpam(); startSpam(); }
+        };
+        burstToggle.onchange = e => {
+            isBurstMode = e.target.checked;
+            localStorage.setItem('JJ_BURST', isBurstMode);
+            burstBox.style.opacity = isBurstMode ? '1' : '0.5';
+            if (isSpamming) { stopSpam(); startSpam(); }
+        };
+        burstCountInput.oninput = e => { burstCount = +e.target.value; localStorage.setItem('JJ_BURST_COUNT', burstCount); };
+        burstCooldownInput.oninput = e => { burstCooldown = +e.target.value; localStorage.setItem('JJ_BURST_COOLDOWN', burstCooldown); };
+        lightToggle.onchange = e => { lightweightMode = e.target.checked; localStorage.setItem('JJ_LIGHT', lightweightMode); };
+        hotkeyInput.addEventListener('keydown', e => {
+            e.preventDefault();
+            if (e.key === "Backspace") {
+                hotkeyInput.value = ''; customHotkey = ''; localStorage.setItem('JJ_HOTKEY', '');
+            } else {
+                let combo = [];
+                if (e.ctrlKey) combo.push('Ctrl');
+                if (e.shiftKey) combo.push('Shift');
+                if (e.altKey) combo.push('Alt');
+                combo.push(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+                hotkeyInput.value = combo.join('+');
+                customHotkey = hotkeyInput.value;
+                localStorage.setItem('JJ_HOTKEY', customHotkey);
+            }
+        });
+    }
+
+    // ────────────────────────────────────────────────
+    // TUTORIAL SCREEN
+    // ────────────────────────────────────────────────
+    function showTutorial() {
+        const overlay = document.createElement('div');
+        overlay.className = 'poison-overlay';
+        const canvas = document.createElement('canvas');
+        canvas.className = 'poison-matrix';
+        overlay.appendChild(canvas);
+
+        const neon = document.createElement('div');
+        neon.className = 'poison-neon';
+        neon.textContent = 'POISON PURPLE SPAMMER – JJ VENOM 2026';
+        overlay.appendChild(neon);
+
+        const box = document.createElement('div');
+        box.className = 'poison-panel';
+        box.innerHTML = `
+            <h2>☠️ VIRUS INITIALIZED</h2>
+            <p>• Click <b>POISON</b> to infect / quarantine</p>
+            <p>• Ctrl + S → toxin console</p>
+            <p>• Customize payload, spread rate, plague burst, vector</p>
+            <p style="opacity:0.7; font-size:0.9em;">INFECTED BY JJ</p>
+            <button id="closeTut">DISPERSE</button>
+        `;
+        overlay.appendChild(box);
+        document.body.appendChild(overlay);
+
+        box.querySelector('#closeTut').onclick = () => overlay.remove();
+
+        // Same poison matrix
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resize();
+        window.addEventListener('resize', resize);
+
+        if (!lightweightMode) {
+            const fontSize = 16;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = Array(columns).fill(0).map(() => Math.random() * canvas.height);
+            const chars = '☠️🧪💀毒毒毒~≈≈≈0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$%#&@毒';
+
+            function draw() {
+                ctx.fillStyle = 'rgba(30,0,50,0.10)';
+                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = 'rgba(224,64,251,0.45)';
+                ctx.font = `${fontSize}px Consolas, monospace`;
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i]);
+                    drops[i] += fontSize * 0.5;
+                    if (drops[i] > canvas.height && Math.random() > 0.97) drops[i] = 0;
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+    }
+
+    // ────────────────────────────────────────────────
+    // STYLES – Poison Purple theme
+    // ────────────────────────────────────────────────
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes venomPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(224,64,251,0.3); }
+            50% { box-shadow: 0 0 45px 20px rgba(194,24,91,0.7), inset 0 0 25px rgba(156,39,176,0.5); }
+        }
+        @keyframes corruptFlicker {
+            0%,100% { text-shadow: 0 0 12px #e040fb; opacity:1; }
+            10%, 30%, 60% { opacity: 0.7; text-shadow: 3px 0 #c2185b, -3px 0 #ab47bc; }
+            45%, 75% { opacity: 0.95; text-shadow: 0 0 25px #d500f9; }
+        }
+        .poison-overlay {
+            position: fixed; inset: 0; z-index: 100001;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: radial-gradient(circle at 30% 40%, rgba(156,39,176,0.18), transparent 65%),
+                        radial-gradient(circle at 70% 60%, rgba(194,24,91,0.15), transparent 65%),
+                        #12001a;
+            background-size: 350% 350%; animation: corruptFlow 22s ease-in-out infinite;
+            overflow: hidden;
+        }
+        .poison-matrix { position: absolute; inset: 0; opacity: 0.7; }
+        .poison-neon {
+            position: relative; z-index: 2; margin-bottom: 40px;
+            font-size: 46px; font-weight: 900; font-family: Consolas, monospace;
+            color: #e040fb; text-shadow: 0 0 18px #e040fb, 0 0 35px #c2185b, 0 0 55px #7b1fa2;
+            animation: corruptFlicker 3s infinite;
+        }
+        .poison-panel {
+            position: relative; z-index: 2; background: rgba(20,0,40,0.92);
+            color: #e040fb; padding: 32px; border-radius: 12px; width: 480px; max-width: 94%;
+            max-height: 88vh; overflow-y: auto; font-family: Consolas, monospace;
+            box-shadow: 0 0 50px rgba(156,39,176,0.35), inset 0 0 25px rgba(194,24,91,0.2);
+            border: 2px solid rgba(171,71,188,0.45);
+        }
+        .poison-panel h2 { color: #d500f9; text-shadow: 0 0 15px #c2185b; margin-top: 0; }
+        .poison-panel label { color: #ce93d8; margin: 15px 0 6px; display: block; }
+        .poison-panel input, .poison-panel textarea {
+            background: #180033; color: #e040fb; border: 1px solid #ab47bc;
+            border-radius: 6px; padding: 10px; font-family: inherit;
+        }
+        .poison-panel button {
+            background: linear-gradient(135deg, #e040fb, #c2185b);
+            color: #000; border: none; padding: 14px; border-radius: 8px;
+            cursor: pointer; font-weight: bold; margin-top: 20px; width: 100%;
+            box-shadow: 0 0 25px rgba(224,64,251,0.6);
+            transition: all 0.3s;
+        }
+        .poison-panel button:hover { box-shadow: 0 0 50px rgba(224,64,251,0.85); transform: scale(1.04); }
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin: 15px 0; }
+        .poison-panel span { font-size: 0.85em; color: #ce93d8; }
+        @keyframes corruptFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+    `;
+    document.head.appendChild(style);
+
+    // ────────────────────────────────────────────────
+    // HOTKEYS & INIT (unchanged)
+    // ────────────────────────────────────────────────
+    document.addEventListener('keydown', e => {
+        if (document.activeElement?.id === 'hotkeyInput') return;
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            if (!settingsOverlay) createSettingsOverlay();
+            settingsOverlay.style.display = settingsOverlay.style.display === 'flex' ? 'none' : 'flex';
+        }
+        if (!customHotkey) return;
+        const keys = customHotkey.split('+');
+        let match = (!keys.includes('Ctrl') || e.ctrlKey) &&
+                    (!keys.includes('Shift') || e.shiftKey) &&
+                    (!keys.includes('Alt') || e.altKey) &&
+                    keys.includes(e.key.length === 1 ? e.key.toUpperCase() : e.key);
+        if (match) {
+            e.preventDefault();
+            isSpamming ? stopSpam() : startSpam();
+        }
+    });
+
+    showTutorial();
+
+    const observer = new MutationObserver(() => {
+        if (getInput()) {
+            createSpamButton();
+            createSettingsOverlay();
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // Drag-to-select code remains the same – paste your full drag section here if needed
+
+})();
