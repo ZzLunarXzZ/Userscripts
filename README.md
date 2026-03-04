@@ -10,7 +10,6 @@
 ## 🔥 WhatsApp+ Features
 
 - Spam sending option (repeat messages quickly)
-- Drag-box selection for forwarding multiple messages
 - Customizable speed, burst mode, cooldown, and hotkeys
 - Sleek themed overlays (popups & settings consoles)
 
